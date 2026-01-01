@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 import Places from './components/Places.jsx';
 import { AVAILABLE_PLACES } from './data.js';
@@ -9,8 +9,10 @@ import { sortPlacesByDistance } from './loc.js';
 
 
 const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || []
-const storedPlaces = storedIds.map(id =>
-  AVAILABLE_PLACES.find((place) => place.id === id))
+const storedPlaces = storedIds
+  .map(id => AVAILABLE_PLACES.find(place => place.id === id))
+  .filter(Boolean);
+
 
 function App() {
   const selectedPlace = useRef();
@@ -53,19 +55,21 @@ function App() {
     }
   }
 
-  function handleRemovePlace() {
-    setPickedPlaces((prevPickedPlaces) =>
-      prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
-    );
-    setIsModalOpen(false)
-    const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || []
-    localStorage.setItem('selectedPlaces', JSON.stringify([storedIds.filter((id) => id !== selectedPlace.current)]))
+  const handleRemovePlace = useCallback(
+    function handleRemovePlace() {
+      setPickedPlaces((prevPickedPlaces) =>
+        prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
+      );
+      setIsModalOpen(false)
+      const storedIds = JSON.parse(localStorage.getItem('selectedPlaces')) || []
+      localStorage.setItem('selectedPlaces', JSON.stringify([storedIds.filter((id) => id !== selectedPlace.current)]))
 
-  }
+    }, [])
+
 
   return (
     <>
-      <Modal open={modalIsOpen}>
+      <Modal open={modalIsOpen} onClose={handleStopRemovePlace}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
